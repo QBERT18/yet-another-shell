@@ -25,6 +25,6 @@ func FileExistsAndExecutable(filePath string) bool {
 }
 
 func CustomSplit(input string) []string {
-	re := regexp.MustCompile(`exit 0|[^\s]+`)
+	re := regexp.MustCompile(`exit 0|\"[^\"]*\"|[^\s]+`)
 	return re.FindAllString(input, -1)
 }

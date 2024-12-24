@@ -32,6 +32,7 @@ func main() {
 
 		inputParts := yetcommand.CustomSplit(strings.TrimSpace(input))
 
+		fmt.Println("inputParts: ", inputParts)
 		handleCommand(inputParts, commands)
 	}
 }
