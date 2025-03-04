@@ -4,9 +4,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
-func SearchProgramInPath(program string, paths []string) string {
+func SearchProgramInPath(program string) string {
+	paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
 	for _, dir := range paths {
 		fullPath := filepath.Join(dir, program)
 		if FileExistsAndExecutable(fullPath) {

@@ -8,21 +8,21 @@ import (
 	"strings"
 
 	yetcommand "github.com/QBERT18/yet-another-shell/yetCommand"
+	yetshellwords "github.com/QBERT18/yet-another-shell/yetShellWords"
 )
 
-var paths []string
-
-func init() {
-	paths = strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
-}
-
 func main() {
+
+	p := yetshellwords.NewParser()
+	p.ParseBacktick = true
+
 	reader := bufio.NewReader(os.Stdin)
 
 	commands := registerCommands()
 
 	for {
-		fmt.Print("$ ")
+		fmt.Println()
+		fmt.Print("> ")
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -30,7 +30,10 @@ func main() {
 			continue
 		}
 
-		inputParts := yetcommand.CustomSplit(strings.TrimSpace(input))
+		inputParts, err := p.Parse(strings.TrimSpace(input))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error parsing input: ", err)
+		}
 
 		handleCommand(inputParts, commands)
 	}
@@ -55,6 +58,36 @@ func registerCommands() map[string]yetcommand.Command {
 		SubCommand: false,
 	}
 
+	commands["pwd"] = &yetcommand.BuiltinCommand{
+		Name: "pwd",
+		ActionFunc: func(input []string) {
+			path, err := os.Getwd()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "pwd: error retrieving current directory")
+				return
+			}
+			fmt.Println(path)
+		},
+		SubCommand: false,
+	}
+
+	commands["cd"] = &yetcommand.BuiltinCommand{
+		Name: "cd",
+		ActionFunc: func(input []string) {
+			path := "~"
+			if len(input) > 1 {
+				path = strings.Join(input[1:], " ")
+			}
+			if path == "~" {
+				path = os.Getenv("HOME")
+			}
+			if err := os.Chdir(path); err != nil {
+				fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", path)
+			}
+		},
+		SubCommand: false,
+	}
+
 	commands["type"] = &yetcommand.BuiltinCommand{
 		Name: "type",
 		ActionFunc: func(input []string) {
@@ -62,7 +95,7 @@ func registerCommands() map[string]yetcommand.Command {
 				if cmd, found := commands[SubCommand]; found {
 					fmt.Printf("%s is a %s command\n", SubCommand, cmd.GetType())
 				} else {
-					foundPath := yetcommand.SearchProgramInPath(SubCommand, paths)
+					foundPath := yetcommand.SearchProgramInPath(SubCommand)
 					if foundPath != "" {
 						fmt.Printf("%s is %s\n", SubCommand, foundPath)
 					} else {
@@ -90,8 +123,16 @@ func handleCommand(input []string, commands map[string]yetcommand.Command) {
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 		err := cmd.Run()
+
 		if err != nil {
-			fmt.Fprintf(os.Stdout, "%s: command not found\n", command)
+			exitError, ok := err.(*exec.ExitError)
+			if ok {
+				fmt.Fprintf(os.Stderr, "%s: command failed with exit code %d\n", command, exitError.ExitCode())
+			} else if os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
+			} else {
+				fmt.Fprintf(os.Stderr, "%s: execution error: %v\n", command, err)
+			}
 		}
 	}
 }
