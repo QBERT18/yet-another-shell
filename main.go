@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	yetcommand "github.com/QBERT18/yet-another-shell/yetCommand"
-	yetshellwords "github.com/QBERT18/yet-another-shell/yetShellWords"
+	yetshellwords "github.com/QBERT18/yet-another-shell/yetShellwords"
 )
 
 func main() {
