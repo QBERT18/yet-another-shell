@@ -5,38 +5,82 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
+	"github.com/QBERT18/yet-another-shell/lexer"
 	yetcommand "github.com/QBERT18/yet-another-shell/yetCommand"
-	yetshellwords "github.com/QBERT18/yet-another-shell/yetShellwords"
 )
 
+var tokens []string
+
 func main() {
-
-	p := yetshellwords.NewParser()
-	p.ParseBacktick = true
-
-	reader := bufio.NewReader(os.Stdin)
-
 	commands := registerCommands()
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Println()
+		tokens = []string{}
+
 		fmt.Print("> ")
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error reading input: ", err)
+			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
 
-		inputParts, err := p.Parse(strings.TrimSpace(input))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error parsing input: ", err)
+		// Trim whitespace and check if the input is empty
+		input = strings.TrimSpace(input)
+		if input == "" {
+			continue
 		}
 
-		handleCommand(inputParts, commands)
+		// Tokenize the input
+		scanner := lexer.NewScanner(strings.NewReader(input))
+		for {
+			tok, lit := scanner.Scan()
+			if tok == lexer.EOF {
+				break
+			}
+			// fmt.Printf("Token %s: %s, len:%d\n", tok.String(), lit, len(lit))
+			tokens = append(tokens, lit)
+		}
+		fmt.Println("Tokens array:", tokens)
+		err = execute(tokens, commands)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
 	}
+}
+
+func execute(input []string, commands map[string]yetcommand.Command) error {
+	if len(input) == 0 || input[0] == "" {
+		return nil
+	}
+
+	command := input[0]
+	if cmd, found := commands[command]; found {
+		cmd.GetAction(input)
+	} else {
+		var cmd *exec.Cmd
+
+		if runtime.GOOS == "windows" {
+			// Run commands inside PowerShell
+			args := append([]string{"-Command"}, strings.Join(input, ""))
+			cmd = exec.Command("powershell.exe", args...)
+			fmt.Println("cmd:", cmd)
+		} else {
+			// Unix-based systems (Linux, macOS)
+			cmd = exec.Command(input[0], strings.Join(input[1:], ""))
+			fmt.Println("cmd:", cmd)
+		}
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+
+	}
+	return nil
 }
 
 func registerCommands() map[string]yetcommand.Command {
@@ -74,15 +118,30 @@ func registerCommands() map[string]yetcommand.Command {
 	commands["cd"] = &yetcommand.BuiltinCommand{
 		Name: "cd",
 		ActionFunc: func(input []string) {
-			path := "~"
-			if len(input) > 1 {
-				path = strings.Join(input[1:], " ")
+			var path string
+
+			// Handle no arguments (default to home directory)
+			if len(input) == 1 {
+				path = os.Getenv("HOME")
+			} else {
+				// Join all arguments after "cd" with spaces
+				path = strings.Join(input[1:], "")
 			}
+
+			// Handle "~" as the home directory
 			if path == "~" {
 				path = os.Getenv("HOME")
 			}
-			if err := os.Chdir(path); err != nil {
+
+			// Check if the path exists and is a directory
+			if info, err := os.Stat(path); err != nil || !info.IsDir() {
 				fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", path)
+				return
+			}
+
+			// Change directory
+			if err := os.Chdir(path); err != nil {
+				fmt.Fprintf(os.Stderr, "cd: %s: %v\n", path, err)
 			}
 		},
 		SubCommand: false,
@@ -108,31 +167,4 @@ func registerCommands() map[string]yetcommand.Command {
 	}
 
 	return commands
-}
-
-func handleCommand(input []string, commands map[string]yetcommand.Command) {
-	if len(input) == 0 || input[0] == "" {
-		return
-	}
-
-	command := input[0]
-	if cmd, found := commands[command]; found {
-		cmd.GetAction(input)
-	} else {
-		cmd := exec.Command(command, input[1:]...)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		err := cmd.Run()
-
-		if err != nil {
-			exitError, ok := err.(*exec.ExitError)
-			if ok {
-				fmt.Fprintf(os.Stderr, "%s: command failed with exit code %d\n", command, exitError.ExitCode())
-			} else if os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
-			} else {
-				fmt.Fprintf(os.Stderr, "%s: execution error: %v\n", command, err)
-			}
-		}
-	}
 }
