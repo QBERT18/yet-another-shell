@@ -1,7 +1,3 @@
-Here’s a corrected and beautified version of your `README.md` with icons, better formatting, and improved readability:
-
----
-
 # 🐚 **Build Your Own Shell** 🐚
 
 [![progress-banner](https://backend.codecrafters.io/progress/shell/514277f4-e764-48fa-b6e2-3899cbb05cf9)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
