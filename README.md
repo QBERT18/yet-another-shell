@@ -80,12 +80,6 @@ This project was inspired by the **["Build Your Own Shell" Challenge](https://ap
 
 ---
 
-## 📝 **License**
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🙏 **Acknowledgments**
 
 - [CodeCrafters](https://codecrafters.io) for the amazing challenge.
