@@ -118,14 +118,3 @@ This project is still under development. Contributions and feedback are welcome!
 
 Enjoy building your own shell! 🎉  
 Happy coding! 💻
-
----
-
-This version includes:
-- **Icons** for visual appeal.
-- **Better structure** with clear sections.
-- **Code blocks** for commands and file structure.
-- **Links** to relevant resources.
-- **Call-to-action** for contributions and testing.
-
-Let me know if you’d like further tweaks! 😊
