@@ -37,23 +37,6 @@ The shell is designed to work on both **Linux** 🐧 and **Windows** 🪟, thoug
 
 ---
 
-## 📂 **Project Structure**
-
-```
-.
-├── main.go               # Entry point for the shell
-├── lexer/                # Custom lexer implementation
-│   ├── scanner.go        # Token scanning logic
-│   └── tokens.go         # Token definitions
-├── commands/             # Built-in command implementations
-│   ├── cd.go             # `cd` command
-│   ├── echo.go           # `echo` command
-│   └── ...               # Other commands
-└── README.md             # This file
-```
-
----
-
 ## 🧪 **Testing**
 
 To test the shell, run the following commands:
