@@ -29,23 +29,25 @@ func main() {
 			continue
 		}
 
-		// Trim whitespace and check if the input is empty
 		input = strings.TrimSpace(input)
 		if input == "" {
 			continue
 		}
 
-		// Tokenize the input
 		scanner := lexer.NewScanner(strings.NewReader(input))
 		for {
 			tok, lit := scanner.Scan()
 			if tok == lexer.EOF {
 				break
 			}
-			// fmt.Printf("Token %s: %s, len:%d\n", tok.String(), lit, len(lit))
+
+			// fmt.Printf("Token %s: %s, len:%d\n", tok.String(), lit, len(lit)) // Debugging
+
 			tokens = append(tokens, lit)
 		}
-		fmt.Println("Tokens array:", tokens)
+
+		// fmt.Println("Tokens array:", tokens) // Debugging
+
 		err = execute(tokens, commands)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -120,26 +122,21 @@ func registerCommands() map[string]yetcommand.Command {
 		ActionFunc: func(input []string) {
 			var path string
 
-			// Handle no arguments (default to home directory)
 			if len(input) == 1 {
 				path = os.Getenv("HOME")
 			} else {
-				// Join all arguments after "cd" with spaces
 				path = strings.Join(input[1:], "")
 			}
 
-			// Handle "~" as the home directory
 			if path == "~" {
 				path = os.Getenv("HOME")
 			}
 
-			// Check if the path exists and is a directory
 			if info, err := os.Stat(path); err != nil || !info.IsDir() {
 				fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", path)
 				return
 			}
 
-			// Change directory
 			if err := os.Chdir(path); err != nil {
 				fmt.Fprintf(os.Stderr, "cd: %s: %v\n", path, err)
 			}

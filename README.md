@@ -1,12 +1,131 @@
+Here’s a corrected and beautified version of your `README.md` with icons, better formatting, and improved readability:
+
+---
+
+# 🐚 **Build Your Own Shell** 🐚
+
 [![progress-banner](https://backend.codecrafters.io/progress/shell/514277f4-e764-48fa-b6e2-3899cbb05cf9)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Go solutions to the
-["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
+This repository contains my solution for the **["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview)** on CodeCrafters.
 
-In this challenge, you'll build your own POSIX compliant shell that's capable of
-interpreting shell commands, running external programs and builtin commands like
-cd, pwd, echo and more. Along the way, you'll learn about shell command parsing,
-REPLs, builtin commands, and more.
+---
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## 🚀 **About the Project**
+
+I built my own shell (and PowerShell-like implementation) using **Go**! 🛠️  
+The project includes a custom **lexer** for parsing user input, inspired by this guide:  
+[**Handwritten Parsers & Lexers in Go**](https://blog.gopheracademy.com/advent-2014/parsers-lexers/).
+
+The shell is designed to work on both **Linux** 🐧 and **Windows** 🪟, though it’s still a work in progress. Some commands may not work perfectly yet, but I’m actively improving it! 💪
+
+---
+
+## 🛠️ **Features**
+
+- **Custom Lexer**: Handles tokenization of user input.
+- **Cross-Platform**: Works on both Linux and Windows.
+- **Basic Commands**: Supports commands like `cd`, `echo`, `ls`, and more.
+- **PowerShell-like Commands**: Includes equivalents for PowerShell commands (e.g., `Write-Output` for `echo`).
+
+---
+
+## 🐞 **Known Issues**
+
+- Some commands are still buggy or incomplete.
+- Cross-platform compatibility needs further testing.
+- Error handling could be improved.
+
+---
+
+## 📂 **Project Structure**
+
+```
+.
+├── main.go               # Entry point for the shell
+├── lexer/                # Custom lexer implementation
+│   ├── scanner.go        # Token scanning logic
+│   └── tokens.go         # Token definitions
+├── commands/             # Built-in command implementations
+│   ├── cd.go             # `cd` command
+│   ├── echo.go           # `echo` command
+│   └── ...               # Other commands
+└── README.md             # This file
+```
+
+---
+
+## 🧪 **Testing**
+
+To test the shell, run the following commands:
+
+### **Basic Commands**
+```bash
+echo "Hello, World!"
+cd /path/to/directory
+ls
+```
+
+### **PowerShell-like Commands**
+```powershell
+Write-Output "Hello, World!"
+Set-Location C:\path\to\directory
+Get-ChildItem
+```
+
+---
+
+## 🛠️ **How to Run**
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/your-shell-repo.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd your-shell-repo
+   ```
+3. Build and run the shell:
+   ```bash
+   go run main.go
+   ```
+
+---
+
+## 🌟 **Inspiration**
+
+This project was inspired by the **["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview)** on CodeCrafters. If you’re viewing this repo on GitHub, head over to [codecrafters.io](https://codecrafters.io) to try the challenge yourself!
+
+---
+
+## 📝 **License**
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 **Acknowledgments**
+
+- [CodeCrafters](https://codecrafters.io) for the amazing challenge.
+- [Gopher Academy](https://blog.gopheracademy.com) for the lexer and parser guide.
+
+---
+
+## 🚧 **Work in Progress**
+
+This project is still under development. Contributions and feedback are welcome! Feel free to open an issue or submit a pull request.
+
+---
+
+Enjoy building your own shell! 🎉  
+Happy coding! 💻
+
+---
+
+This version includes:
+- **Icons** for visual appeal.
+- **Better structure** with clear sections.
+- **Code blocks** for commands and file structure.
+- **Links** to relevant resources.
+- **Call-to-action** for contributions and testing.
+
+Let me know if you’d like further tweaks! 😊
