@@ -5,38 +5,33 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
+	"unicode"
 
 	yetcommand "github.com/QBERT18/yet-another-shell/yetCommand"
-	yetshellwords "github.com/QBERT18/yet-another-shell/yetShellwords"
 )
 
 func main() {
 
-	p := yetshellwords.NewParser()
-	p.ParseBacktick = true
-
-	reader := bufio.NewReader(os.Stdin)
-
 	commands := registerCommands()
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Println()
+		fmt.Print()
 		fmt.Print("> ")
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error reading input: ", err)
-			continue
+			fmt.Fprintln(os.Stderr, err)
 		}
 
-		inputParts, err := p.Parse(strings.TrimSpace(input))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error parsing input: ", err)
+		tokens := tokenize(strings.TrimSuffix(input, "\n"))
+		if err = execute(tokens, commands); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 		}
-
-		handleCommand(inputParts, commands)
 	}
+
 }
 
 func registerCommands() map[string]yetcommand.Command {
@@ -110,29 +105,69 @@ func registerCommands() map[string]yetcommand.Command {
 	return commands
 }
 
-func handleCommand(input []string, commands map[string]yetcommand.Command) {
+func execute(input []string, commands map[string]yetcommand.Command) error {
 	if len(input) == 0 || input[0] == "" {
-		return
+		return nil
 	}
 
 	command := input[0]
 	if cmd, found := commands[command]; found {
 		cmd.GetAction(input)
 	} else {
-		cmd := exec.Command(command, input[1:]...)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		err := cmd.Run()
+		var cmd *exec.Cmd
 
-		if err != nil {
-			exitError, ok := err.(*exec.ExitError)
-			if ok {
-				fmt.Fprintf(os.Stderr, "%s: command failed with exit code %d\n", command, exitError.ExitCode())
-			} else if os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
+		if runtime.GOOS == "windows" {
+			args := append([]string{"-Command"}, input...)
+			cmd = exec.Command("powershell.exe", args...)
+		} else {
+			cmd = exec.Command(input[0], input[1:]...)
+		}
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+
+	}
+	return nil
+}
+
+func tokenize(input string) []string {
+	var tokens []string
+	var token strings.Builder
+	inQuotes := false
+	quoteChar := rune(0) // Track whether we're in ' or "
+
+	for i, ch := range input {
+		switch {
+		case ch == '"' || ch == '\'':
+			// Handle quoted strings
+			if inQuotes && ch == quoteChar {
+				inQuotes = false // Closing quote
+				tokens = append(tokens, token.String())
+				token.Reset()
+			} else if !inQuotes {
+				inQuotes = true
+				quoteChar = ch // Remember quote type
 			} else {
-				fmt.Fprintf(os.Stderr, "%s: execution error: %v\n", command, err)
+				token.WriteRune(ch) // Inside quotes
 			}
+
+		case unicode.IsSpace(ch) && !inQuotes:
+			// End current token on space (unless inside quotes)
+			if token.Len() > 0 {
+				tokens = append(tokens, token.String())
+				token.Reset()
+			}
+
+		default:
+			token.WriteRune(ch)
+		}
+
+		// If it's the last character, flush the token
+		if i == len(input)-1 && token.Len() > 0 {
+			tokens = append(tokens, token.String())
 		}
 	}
+
+	return tokens
 }

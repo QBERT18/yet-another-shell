@@ -3,7 +3,6 @@ package yetcommand
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -24,9 +23,4 @@ func FileExistsAndExecutable(filePath string) bool {
 		return false
 	}
 	return !info.IsDir() && (info.Mode()&0111 != 0)
-}
-
-func CustomSplit(input string) []string {
-	re := regexp.MustCompile(`exit 0|\"[^\"]*\"|[^\s]+`)
-	return re.FindAllString(input, -1)
 }
