@@ -1,4 +1,4 @@
-package yetcommand
+package command
 
 import (
 	"os"

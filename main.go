@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/QBERT18/yet-another-shell/command"
 	"github.com/QBERT18/yet-another-shell/lexer"
-	yetcommand "github.com/QBERT18/yet-another-shell/yetCommand"
 )
 
 var tokens []string
@@ -41,12 +41,8 @@ func main() {
 				break
 			}
 
-			// fmt.Printf("Token %s: %s, len:%d\n", tok.String(), lit, len(lit)) // Debugging
-
 			tokens = append(tokens, lit)
 		}
-
-		// fmt.Println("Tokens array:", tokens) // Debugging
 
 		err = execute(tokens, commands)
 		if err != nil {
@@ -55,13 +51,13 @@ func main() {
 	}
 }
 
-func execute(input []string, commands map[string]yetcommand.Command) error {
+func execute(input []string, commands map[string]command.Command) error {
 	if len(input) == 0 || input[0] == "" {
 		return nil
 	}
 
-	command := input[0]
-	if cmd, found := commands[command]; found {
+	name := input[0]
+	if cmd, found := commands[name]; found {
 		cmd.GetAction(input)
 	} else {
 		var cmd *exec.Cmd
@@ -85,10 +81,10 @@ func execute(input []string, commands map[string]yetcommand.Command) error {
 	return nil
 }
 
-func registerCommands() map[string]yetcommand.Command {
-	commands := make(map[string]yetcommand.Command)
+func registerCommands() map[string]command.Command {
+	commands := make(map[string]command.Command)
 
-	commands["echo"] = &yetcommand.BuiltinCommand{
+	commands["echo"] = &command.BuiltinCommand{
 		Name: "echo",
 		ActionFunc: func(input []string) {
 			fmt.Println(strings.Join(input[1:], " "))
@@ -96,7 +92,7 @@ func registerCommands() map[string]yetcommand.Command {
 		SubCommand: false,
 	}
 
-	commands["exit"] = &yetcommand.BuiltinCommand{
+	commands["exit"] = &command.BuiltinCommand{
 		Name: "exit",
 		ActionFunc: func(input []string) {
 			os.Exit(0)
@@ -104,7 +100,7 @@ func registerCommands() map[string]yetcommand.Command {
 		SubCommand: false,
 	}
 
-	commands["pwd"] = &yetcommand.BuiltinCommand{
+	commands["pwd"] = &command.BuiltinCommand{
 		Name: "pwd",
 		ActionFunc: func(input []string) {
 			path, err := os.Getwd()
@@ -117,7 +113,7 @@ func registerCommands() map[string]yetcommand.Command {
 		SubCommand: false,
 	}
 
-	commands["cd"] = &yetcommand.BuiltinCommand{
+	commands["cd"] = &command.BuiltinCommand{
 		Name: "cd",
 		ActionFunc: func(input []string) {
 			var path string
@@ -144,14 +140,14 @@ func registerCommands() map[string]yetcommand.Command {
 		SubCommand: false,
 	}
 
-	commands["type"] = &yetcommand.BuiltinCommand{
+	commands["type"] = &command.BuiltinCommand{
 		Name: "type",
 		ActionFunc: func(input []string) {
 			for _, SubCommand := range input[1:] {
 				if cmd, found := commands[SubCommand]; found {
 					fmt.Printf("%s is a %s command\n", SubCommand, cmd.GetType())
 				} else {
-					foundPath := yetcommand.SearchProgramInPath(SubCommand)
+					foundPath := command.SearchProgramInPath(SubCommand)
 					if foundPath != "" {
 						fmt.Printf("%s is %s\n", SubCommand, foundPath)
 					} else {
