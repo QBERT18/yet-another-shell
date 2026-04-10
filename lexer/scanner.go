@@ -84,6 +84,14 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	case '`':
 		return BACKTICK, string(ch)
 	case '-':
+		next := s.read()
+		if next != eof && (isLetter(next) || next == '-') {
+			s.unread()
+			return s.scanFlag()
+		}
+		if next != eof {
+			s.unread()
+		}
 		return DASH, string(ch)
 	case '\'':
 		return SINGLE_QUOTE, string(ch)
@@ -163,6 +171,22 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 		return WHICH, buf.String()
 	}
 
+	return IDENT, buf.String()
+}
+
+func (s *Scanner) scanFlag() (Token, string) {
+	var buf bytes.Buffer
+	buf.WriteRune('-')
+	for {
+		ch := s.read()
+		if ch == eof || isWhitespace(ch) {
+			if ch != eof {
+				s.unread()
+			}
+			break
+		}
+		buf.WriteRune(ch)
+	}
 	return IDENT, buf.String()
 }
 
