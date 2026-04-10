@@ -61,7 +61,7 @@ func (e *Engine) Execute(input string) error {
 
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		fullCmd := "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + strings.Join(tokens, " ")
+		fullCmd := "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + input
 		cmd = exec.Command("powershell.exe", "-Command", fullCmd)
 	} else {
 		cmd = exec.Command(tokens[0], tokens[1:]...)

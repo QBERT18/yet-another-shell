@@ -129,14 +129,27 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	buf.WriteRune(s.read())
 
 	for {
-		if ch := s.read(); ch == eof {
+		ch := s.read()
+		if ch == eof {
 			break
-		} else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
+		}
+		if ch == '-' {
+			next := s.read()
+			if next != eof {
+				s.unread()
+			}
+			if next != eof && (isLetter(next) || isDigit(next)) {
+				buf.WriteRune('-')
+				continue
+			}
 			s.unread()
 			break
-		} else {
-			buf.WriteRune(ch)
 		}
+		if !isLetter(ch) && !isDigit(ch) && ch != '_' {
+			s.unread()
+			break
+		}
+		buf.WriteRune(ch)
 	}
 
 	// Check if the identifier is a keyword
