@@ -67,6 +67,10 @@ Get-ChildItem
    ```bash
    go run main.go
    ```
+4. Build as a standalone Windows GUI executable:
+   ```bash
+   go build -ldflags "-H windowsgui" -o yet-another-shell.exe .
+   ```
 
 ---
 
