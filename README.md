@@ -1,93 +1,151 @@
-# 🐚 **Build Your Own Shell** 🐚
+# Yet Another Shell
 
-[![progress-banner](https://backend.codecrafters.io/progress/shell/514277f4-e764-48fa-b6e2-3899cbb05cf9)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+A cross-platform shell written in Go, featuring a Fyne-based desktop GUI and a classic CLI REPL. It speaks both Unix-style and PowerShell-style command names, and delegates unknown commands to the host OS (PowerShell on Windows, direct `exec` on Unix).
 
-This repository contains my solution for the **["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview)** on CodeCrafters.
+## Purpose
 
----
+- Explore how a shell works end-to-end: tokenizer, command dispatch, builtins, and OS delegation.
+- Provide a single binary that feels at home on both Windows and Linux/macOS.
+- Ship a small, readable Go codebase that is easy to extend with new builtins.
 
-## 🚀 **About the Project**
+## Features
 
-I built my own shell (and PowerShell-like implementation) using **Go**! 🛠️  
-The project includes a custom **lexer** for parsing user input, inspired by this guide:  
-[**Handwritten Parsers & Lexers in Go**](https://blog.gopheracademy.com/advent-2014/parsers-lexers/).
+- **Two modes**: desktop GUI (Fyne) by default, or a terminal REPL via `-cli`.
+- **Builtins**: `echo`, `cd`, `pwd`, `type`, `exit`.
+- **PowerShell-style aliases**: lexer recognizes `Write-Output`, `Set-Location`, `Get-ChildItem`, `Get-Content`, `New-Item`, `Remove-Item`, `Copy-Item`, `Move-Item`, `Get-Location`, `Get-Command`, and more.
+- **Host fallback**: anything that isn't a builtin is executed by PowerShell on Windows and by `exec.Command` on Unix.
+- **UTF-8 safe on Windows**: forces `[Console]::OutputEncoding = UTF8` for PowerShell child processes.
+- **No console flash**: Windows child processes are spawned with `CREATE_NO_WINDOW`.
 
-The shell is designed to work on both **Linux** 🐧 and **Windows** 🪟, though it’s still a work in progress. Some commands may not work perfectly yet, but I’m actively improving it! 💪
+## Requirements
 
----
+- **Go 1.23+**
+- **CGO toolchain** (required by Fyne for the GUI):
+  - **Windows**: MSYS2 + MinGW-w64 (`gcc`), or TDM-GCC. Make sure `gcc` is on `PATH`.
+  - **Linux**: `gcc`, plus X11/OpenGL dev packages. On Debian/Ubuntu:
+    ```bash
+    sudo apt install gcc libgl1-mesa-dev xorg-dev libxkbcommon-dev
+    ```
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`).
 
-## 🛠️ **Features**
+If you only want the CLI mode you still need CGO for now, because the `gui` package is imported by `main`.
 
-- **Custom Lexer**: Handles tokenization of user input.
-- **Cross-Platform**: Works on both Linux and Windows.
-- **Basic Commands**: Supports commands like `cd`, `echo`, `ls`, and more.
-- **PowerShell-like Commands**: Includes equivalents for PowerShell commands (e.g., `Write-Output` for `echo`).
+## Getting Started
 
----
-
-## 🐞 **Known Issues**
-
-- Some commands are still buggy or incomplete.
-- Cross-platform compatibility needs further testing.
-- Error handling could be improved.
-
----
-
-## 🧪 **Testing**
-
-To test the shell, run the following commands:
-
-### **Basic Commands**
 ```bash
-echo "Hello, World!"
-cd /path/to/directory
-ls
+# 1. Clone
+git clone git@github.com:QBERT18/yet-another-shell.git
+cd yet-another-shell
+
+# 2. Fetch dependencies
+go mod tidy
+
+# 3. Run the GUI
+go run main.go
+
+# 4. Or run the CLI REPL
+go run main.go -cli
 ```
 
-### **PowerShell-like Commands**
-```powershell
-Write-Output "Hello, World!"
-Set-Location C:\path\to\directory
-Get-ChildItem
+## Building a Standalone Binary
+
+```bash
+# Generic build
+go build -o yet-another-shell .
+
+# Windows GUI executable (no attached console window)
+go build -ldflags "-H windowsgui" -o yet-another-shell.exe .
 ```
 
----
+## Usage Examples
 
-## 🛠️ **How to Run**
+### Builtins (both modes)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/your-shell-repo.git
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd your-shell-repo
-   ```
-3. Build and run the shell:
-   ```bash
-   go run main.go
-   ```
+```
+> pwd
+/home/user/projects/yet-another-shell
 
----
+> echo Hello, world!
+Hello, world!
 
-## 🌟 **Inspiration**
+> cd ..
+> pwd
+/home/user/projects
 
-This project was inspired by the **["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview)** on CodeCrafters. If you’re viewing this repo on GitHub, head over to [codecrafters.io](https://codecrafters.io) to try the challenge yourself!
+> type echo
+echo is a builtin command
 
----
+> type git
+git is /usr/bin/git
 
-## 🙏 **Acknowledgments**
+> exit
+```
 
-- [CodeCrafters](https://codecrafters.io) for the amazing challenge.
-- [Gopher Academy](https://blog.gopheracademy.com) for the lexer and parser guide.
+### Unix-style commands (Linux/macOS)
 
----
+Non-builtins are executed directly:
 
-## 🚧 **Work in Progress**
+```
+> ls -la
+> cat go.mod
+> git status
+```
 
-This project is still under development. Contributions and feedback are welcome! Feel free to open an issue or submit a pull request.
+### PowerShell-style commands (Windows)
 
----
+On Windows, anything that isn't a builtin is passed to `powershell.exe`, so full PowerShell syntax works:
 
-Enjoy building your own shell! 🎉  
-Happy coding! 💻
+```
+> Get-ChildItem
+> Get-Process | Where-Object { $_.CPU -gt 10 }
+> (Get-Content README.md).Length
+```
+
+The lexer also recognizes PowerShell-style names for its builtins, so these are equivalent:
+
+| Unix style | PowerShell style |
+|------------|------------------|
+| `echo`     | `Write-Output`   |
+| `cd`       | `Set-Location`   |
+| `pwd`      | `Get-Location`   |
+
+## Project Layout
+
+```
+.
+├── main.go              # entry point; picks GUI or CLI (-cli flag)
+├── gui/                 # Fyne desktop UI
+├── shell/               # Engine: tokenize, dispatch, delegate to OS
+│   ├── engine.go
+│   ├── exec_windows.go  # CREATE_NO_WINDOW for child processes
+│   └── exec_other.go
+├── command/             # Command interface + PATH lookup helpers
+└── lexer/               # Hand-written scanner and token definitions
+```
+
+## Architecture at a Glance
+
+1. `main` parses `-cli` and launches either `gui.Run()` or a bufio-based REPL.
+2. Both modes funnel input into a single `shell.Engine.Execute(input)`.
+3. The engine tokenizes via `lexer.Scanner`, then:
+   - If the first token matches a registered builtin, it runs in-process.
+   - Otherwise on Windows the **raw input** is handed to `powershell.exe -Command` (preserves PowerShell syntax), and on Unix the tokens are handed to `exec.Command`.
+4. `exit` is implemented by panicking with a sentinel error that the engine recovers and propagates, which the GUI uses to close the window.
+
+## Known Limitations
+
+- `cd` with no argument uses `$HOME`, which is empty on Windows (use `$env:USERPROFILE` instead or pass a path explicitly).
+- The builtin `cd` joins its arguments without spaces, so quoted paths containing spaces won't work through the builtin — they work through the OS fallback though.
+- No piping or redirection between builtins yet; the lexer tokenizes `|`, `<`, `>` but the engine doesn't act on them.
+- No command history or line editing in CLI mode.
+
+## Roadmap
+
+- Pipes and redirections handled by the engine itself.
+- Command history and readline-style editing in CLI mode.
+- Configurable prompt and theming.
+- More builtins (`ls`, `cat`, `mkdir`, `touch`, ...).
+
+## License
+
+MIT — see source headers.
