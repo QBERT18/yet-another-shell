@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Go-based shell (CodeCrafters "Build Your Own Shell" challenge). Supports Unix-style and PowerShell-style commands. Ships as a Fyne-based GUI by default with an optional CLI mode. Cross-platform (Windows + Unix), but execution of non-builtin commands is delegated differently per OS (see Architecture).
+Go-based shell with support for Unix-style and PowerShell-style commands. Ships as a Fyne-based GUI by default with an optional CLI mode. Cross-platform (Windows + Unix), but execution of non-builtin commands is delegated differently per OS (see Architecture).
 
 ## Common Commands
 
